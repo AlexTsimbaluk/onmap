@@ -4,8 +4,8 @@ import GoogleMapReact from 'google-map-react';
 const AnyReactComponent = ({ text }) => <div>{text}</div>;
 
 const handleApiLoaded = (map, maps) => {
-  console.log(map);
-  console.log(maps);
+  // console.log(map);
+  // console.log(maps);
 };
  
 class Map extends Component {

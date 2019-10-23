@@ -1,23 +1,52 @@
 .App {
-  text-align: center;
   width: 100%;
 }
 
-.App-logo {
-  height: 40vmin;
+.form-auth .form-control:focus {
+    box-shadow: none;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+
+.user-signed {
+  left: 10px;
+  top: 6px;
 }
 
-.App-link {
-  color: #09d3ac;
+@keyframes login-bg {
+    0% {
+        /*filter: blur(3px);*/
+        filter: blur(4px) hue-rotate(45deg);
+    }   
+    25% {
+        background-position: 0% 0%;
+        /*filter: blur(1px);*/
+    }
+    50% {
+        /*background-position: left bottom;*/
+        /*background-position: 0% 50%;*/
+        /*filter: blur(3px);*/
+    }  
+    75% {
+        /*filter: blur(0px);*/
+        background-position: 100% 100%;
+        filter: blur(4px) hue-rotate(225deg);
+    }   
+    100% {
+        /*background-position: 50% 50%;*/
+        /*filter: blur(1px);*/
+    }
+}
+
+.login-bg {
+    animation: login-bg linear infinite 90s;
+    /*filter: hue-rotate(45deg);*/
+    filter: blur(4px);
+    background-color: #fff;
+    background-image: url('./google-maps-1.webp');
+    /*background-position: center;*/
+    background-position: 100% 0%;
+    background-repeat: no-repeat;
+    /*background-size:cover;*/
+    position: absolute;
+    z-index: -1;
 }
