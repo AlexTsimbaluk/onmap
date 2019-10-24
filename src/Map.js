@@ -9,7 +9,7 @@ import Search from './Search';
 
 
 
-const Marker = ({ text, type, searchType, place, selected, userEmail, position }) => {
+const Marker = ({ text, type, searchType, place, selected, userEmail, position, openNoteForm, editing, addNote, handleEditNote }) => {
   let searchClass = '';
 
   if(searchType === 'search-total') {
@@ -42,7 +42,7 @@ const Marker = ({ text, type, searchType, place, selected, userEmail, position }
       }
 
       {
-        selected && userEmail && <InfoWindow userEmail={userEmail} place={place} />
+        selected && userEmail && <InfoWindow openNoteForm={openNoteForm} handleEditNote={handleEditNote} addNote={addNote} userEmail={userEmail} place={place} editing={editing} />
         // userEmail && <AddNoteForm position={position} userEmail={userEmail} />
       }
     </div>
@@ -70,7 +70,7 @@ const AddNoteForm = ({position, userEmail}) => {
 }
 
 // InfoWindow component
-const InfoWindow = ({place, userEmail}) => {
+const InfoWindow = ({place, userEmail, openNoteForm, editing, addNote, handleEditNote}) => {
   const infoWindowStyle = {
     cursor: 'default',
     position: 'relative',
@@ -82,6 +82,7 @@ const InfoWindow = ({place, userEmail}) => {
     padding: 10,
     zIndex: 100,
   };
+
 
   /*if(!place) {
     return (
@@ -102,18 +103,47 @@ const InfoWindow = ({place, userEmail}) => {
   }*/
 
   return (
-    <div style={infoWindowStyle}>
-      <div style={{ fontSize: 12 }}>
-        {place.email}
-      </div>
-      
-      <div style={{ fontSize: 12, color: 'grey' }}>
-        {place.lat}, {place.long}
+    <div className="d-flex justify-content-between" style={infoWindowStyle}>
+      <div>
+        <div style={{ fontSize: 12 }}>
+          {place.email}
+        </div>
+        
+        <div style={{ fontSize: 12, color: 'grey' }}>
+          {place.lat}, {place.long}
+        </div>
+
+        <div style={{ fontSize: 14, color: 'green' }}>
+          {place.notes}
+        </div>
       </div>
 
-      <div style={{ fontSize: 14, color: 'green' }}>
-        {place.notes}
+      <div>
+        {
+          !!(!editing) &&
+          <div
+            onClick={openNoteForm}
+            className="add-note-button"
+          >+</div>
+        }
+
+        {
+          !!(editing) &&
+          <div
+            onClick={addNote}
+            className="add-note-button"
+          >OK</div>
+        }
       </div>
+
+      {
+        !!editing &&
+        <form className="form-add-note">
+          <div className="form-group">
+            <textarea onClick={(e) => e.stopPropagation()} onChange={handleEditNote} type="text" name="add-note" className="form-control"></textarea>
+          </div>
+        </form>
+      }
     </div>
   );
 };
@@ -140,11 +170,15 @@ class Map extends Component {
       searchString: '',
       searchResults: [],
       searchEmailResults: [],
-      searchNotesResults: []
+      searchNotesResults: [],
+      editing: false,
+      noteText: ''
     });
 
     this.handlePosition = this.handlePosition.bind(this);
+    this.openNoteForm = this.openNoteForm.bind(this);
     this.addNote = this.addNote.bind(this);
+    this.handleEditNote = this.handleEditNote.bind(this);
 
     this.handleSearch = this.handleSearch.bind(this);
 
@@ -184,7 +218,7 @@ class Map extends Component {
 
       let totalEmail = this.props.places.filter(this.filterEmail);
       if(totalEmail.length) this.setState({searchEmailResults: totalEmail});
-      console.log(totalEmail);
+      // console.log(totalEmail);
       // console.log(this.state.searchEmailResults);
       
       let totalNotes = this.props.places.filter(this.filterNotes);
@@ -239,7 +273,7 @@ class Map extends Component {
 
     for(let key in place) {
       if(key === 'email') {
-        return place[key].search(this.state.searchString) !== -1;
+        return place[key].toLowerCase().search(this.state.searchString) !== -1;
       }
     }
   }
@@ -249,13 +283,37 @@ class Map extends Component {
 
     for(let key in place) {
       if(key === 'notes') {
-        return place[key].search(this.state.searchString) !== -1;
+        return place[key].toLowerCase().search(this.state.searchString) !== -1;
       }
     }
   }
 
-  addNote() {
-    // console.log('addNote');
+  openNoteForm(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('openNoteForm');
+
+    this.setState({editing: true});
+  }
+
+  addNote(e) {
+    console.log(this.state.noteText);
+    let center = this.state.userPosition ? this.state.userPosition : this.props.center;
+    let place = {
+      id: '',
+      lat: center.lat,
+      long: center.lng,
+      notes: this.state.noteText,
+      email: this.props.user.email
+    };
+
+    localStorage.setItem('userPlace', JSON.stringify(place));
+    this.setState({editing: false});
+  }
+
+  handleEditNote(e) {
+    console.log(e.target.value);
+    this.setState({noteText: e.target.value});
   }
 
   getPlace(id) {
@@ -270,6 +328,8 @@ class Map extends Component {
 
       let center = this.state.userPosition ? this.state.userPosition : this.props.center;
 
+      console.log(JSON.parse(localStorage.getItem('userPlace')));
+
       let place = {
         id: '',
         lat: center.lat,
@@ -278,16 +338,30 @@ class Map extends Component {
         email: this.props.user.email
       };
 
+      if(!localStorage.getItem('userPlace')) {
+        localStorage.setItem('userPlace', JSON.stringify(place));
+      } else {
+        let p = JSON.parse(localStorage.getItem('userPlace'));
+        console.log(p.notes);
+
+        if(p.notes.length) {
+          place.notes = p.notes;
+        }
+
+        this.setState({ selectedPlace: place });
+      }
+
+
       // console.log(place);
 
-      this.setState({ selectedPlace: place });
     }
   }
 
   handleSearch(e) {
     this.setState({ searchString: e.target.value });
-    // console.log(this.state.searchString);
   }
+
+
 
 
  
@@ -385,6 +459,10 @@ class Map extends Component {
               place={this.state.selectedPlace}
               position={{lat: center.lat, lng: center.lng}}
               userEmail={this.props.user.email}
+              openNoteForm={this.openNoteForm}
+              addNote={this.addNote}
+              handleEditNote={this.handleEditNote}
+              editing={this.state.editing}
             />
           </GoogleMapReact>
         </div>
@@ -405,45 +483,42 @@ class Map extends Component {
 
           {/*<Search places={places} user={this.props.user} />*/}
 
-          <div className="">
-            <div className="">
-              <form className="form-search-email">
-                <div className="form-group">
-                  <label htmlFor="search-input-email">Search anything</label>
-                  <input value={this.state.searchString} onChange={this.handleSearch} type="text" name="searchString" className="form-control" id="search-input-email" placeholder="Search" />
-                </div>
-              </form>
+          <div className="pt-2">
+            <form className="form-search-email">
+              <div className="form-group">
+                <input value={this.state.searchString} onChange={this.handleSearch} type="text" name="searchString" className="form-control" id="search-input-email" placeholder="Search" />
+              </div>
+            </form>
 
+            {
+              !!(this.state.searchEmailResults.length) &&
+              <div className="search-results">
               {
-                !!(this.state.searchEmailResults.length) &&
-                <div className="search-results">
-                {
-                  this.state.searchEmailResults.map((place) => (
-                    <div
-                      key={place.id}
-                    >
-                      <div>{place.email}</div>
-                    </div>
-                  ))
-                }
-                </div>
+                this.state.searchEmailResults.map((place) => (
+                  <div
+                    key={place.id}
+                  >
+                    <div>{place.email}</div>
+                  </div>
+                ))
               }
+              </div>
+            }
 
+            {
+              !!(this.state.searchNotesResults.length) &&
+              <div className="search-results">
               {
-                !!this.state.searchNotesResults.length &&
-                <div className="search-results">
-                {
-                  this.state.searchEmailResults.map((place) => (
-                    <div
-                      key={place.id}
-                    >
-                      <div>{place.notes}</div>
-                    </div>
-                  ))
-                }
-                </div>
+                this.state.searchNotesResults.map((place) => (
+                  <div
+                    key={place.id}
+                  >
+                    <div>{place.notes}</div>
+                  </div>
+                ))
               }
-            </div>
+              </div>
+            }
           </div>
         </div>
       </div>
