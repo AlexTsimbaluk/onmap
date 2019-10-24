@@ -73,3 +73,25 @@ div .form-control:focus {
 .my-marker {
     border: 3px solid #00f;
 }
+
+.search-results {
+    font-size: 14px;
+    background: #fff;
+    height: 200px;
+    width: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+}
+
+.place-marker.search-total {
+    border: 3px solid #45824b;
+}
+
+.place-marker.search-email {
+    border: 3px solid #0083ff;
+}
+
+.place-marker.search-notes {
+    border: 3px solid #f0f;
+}

@@ -5,15 +5,36 @@ import GoogleMapReact from 'google-map-react';
  
 import _places from './data/PLACES.json';
 
-const Marker = ({ text, type, place, selected, userEmail, position }) => {
+import Search from './Search';
+
+
+
+const Marker = ({ text, type, searchType, place, selected, userEmail, position }) => {
+  let searchClass = '';
+
+  if(searchType === 'search-total') {
+    searchClass = 'search-total';
+  } else if(searchType === 'search-email') {
+    searchClass = 'search-email';
+  } else if(searchType === 'search-notes') {
+    searchClass = 'search-notes';
+  }
+
+  let classNameString = 'custom-marker ' + searchClass;
+  if(type === 0) {
+    classNameString += ' my-marker';
+  } else {
+    classNameString += ' place-marker';
+  }
+
   return (
     <div>
       {
         type === 0
         ?
-        <div className="custom-marker my-marker">{text}</div>
+        <div className={classNameString}>{text}</div>
         :
-        <div className="custom-marker place-marker">{text}</div>
+        <div className={classNameString}>{text}</div>
       }
 
       {
@@ -101,6 +122,11 @@ const handleApiLoaded = (map, maps) => {
   // console.log(map);
   // console.log(maps);
 };
+
+
+
+
+let places;
  
 class Map extends Component {
   constructor() {
@@ -109,11 +135,22 @@ class Map extends Component {
     this.state = ({
       userPosition: null,
       zoom: 5,
-      selectedPlace: null
+      selectedPlace: null,
+      searchType: 'notes',
+      searchString: '',
+      searchResults: [],
+      searchEmailResults: [],
+      searchNotesResults: []
     });
 
     this.handlePosition = this.handlePosition.bind(this);
     this.addNote = this.addNote.bind(this);
+
+    this.handleSearch = this.handleSearch.bind(this);
+
+    this.filter = this.filter.bind(this);
+    this.filterEmail = this.filterEmail.bind(this);
+    this.filterNotes = this.filterNotes.bind(this);
   }
 
   static defaultProps = {
@@ -128,8 +165,37 @@ class Map extends Component {
     this.handlePosition();
   }
 
-  componentDidUpdate() {
-    console.log('componentDidUpdate');
+  componentDidUpdate(prevProps, prevState) {
+    if(this.props.places) {
+      places = this.props.places;
+    }
+
+    /*console.log(this.state.searchString.length > 2);
+    console.log(this.state.searchString !== prevState.searchString);
+    console.log(this.state.searchString);
+    console.log(prevState.searchString);
+    console.log(this.state.searchString.length > 2 && this.state.searchString !== prevState.searchString);*/
+
+    if(this.state.searchString.length > 2 && this.state.searchString !== prevState.searchString) {
+      let total = this.props.places.filter(this.filter);
+      if(total.length) this.setState({searchResults: total});
+      // console.log(total);
+      // console.log(this.state.searchResults);
+
+      let totalEmail = this.props.places.filter(this.filterEmail);
+      if(totalEmail.length) this.setState({searchEmailResults: totalEmail});
+      console.log(totalEmail);
+      // console.log(this.state.searchEmailResults);
+      
+      let totalNotes = this.props.places.filter(this.filterNotes);
+      if(totalNotes.length) this.setState({searchNotesResults: totalNotes});
+      // console.log(totalNotes);
+      // console.log(this.state.searchNotesResults);
+    } else if(this.state.searchString.length < 3 && this.state.searchString !== prevState.searchString) {
+      this.setState({searchResults: []});        
+      this.setState({searchEmailResults: []});        
+      this.setState({searchNotesResults: []});        
+    }
   }
 
   handlePosition() {
@@ -160,6 +226,34 @@ class Map extends Component {
     }
   }
 
+  filter(place) {
+    if(this.state.searchString.length < 3) return true;
+
+    // console.log(this.filterEmail(place) && this.filterNotes(place));
+
+    return this.filterEmail(place) && this.filterNotes(place);
+  }
+
+  filterEmail(place) {
+    if(this.state.searchString.length < 3) return true;
+
+    for(let key in place) {
+      if(key === 'email') {
+        return place[key].search(this.state.searchString) !== -1;
+      }
+    }
+  }
+
+  filterNotes(place) {
+    if(this.state.searchString.length < 3) return true;
+
+    for(let key in place) {
+      if(key === 'notes') {
+        return place[key].search(this.state.searchString) !== -1;
+      }
+    }
+  }
+
   addNote() {
     // console.log('addNote');
   }
@@ -184,71 +278,174 @@ class Map extends Component {
         email: this.props.user.email
       };
 
-      console.log(place);
+      // console.log(place);
 
       this.setState({ selectedPlace: place });
     }
   }
 
-  getUserPlace() {
-
+  handleSearch(e) {
+    this.setState({ searchString: e.target.value });
+    // console.log(this.state.searchString);
   }
 
 
  
   render() {
-    let places = JSON.parse(JSON.stringify(_places));
+    // let places = JSON.parse(JSON.stringify(_places));
+    // let places = this.props.places;
+    // places = this.props.places;
     // console.log(places);
-    console.log(this.state.selectedPlace);
+    // console.log(this.state.selectedPlace);
+
+    // console.log(this.state.searchResults);
+    // console.log(this.state.searchEmailResults);
+    // console.log(this.state.searchNotesResults);
 
     let center = this.state.userPosition ? this.state.userPosition : this.props.center;
 
     return (
       // Important! Always set the container height explicitly
       <div style={{ height: '100vh', width: '100%' }}>
-        <GoogleMapReact
-          bootstrapURLKeys={{ key: 'AIzaSyCalL3qcZmf7yCDDV9iYeAck0nKgJUKFm0' }}
-          defaultCenter={this.props.center}
-          center={center}
-          defaultZoom={this.state.zoom}
-          yesIWantToUseGoogleMapApiInternals
-          onGoogleApiLoaded={({ map, maps }) => handleApiLoaded(map, maps)}
-          onClick={({x, y, lat, lng, event}) => {
-            this.setState({ selectedPlace: null });
-          }}
-          onChildClick={(e) => {
-            console.log(e);
-            this.getPlace(e);
-          }}
-        >
-          {
-            places.map((place) => (
-              <Marker
-                center={{lat: place.lat, lng: place.long}}
-                defaultCenter={[place.lat, place.long]}
-                key={place.id}
-                lat={place.lat}
-                lng={place.long}
-                place={place}
-                selected={this.state.selectedPlace && this.state.selectedPlace.id === place.id}
-                text={''}
-              />
-            ))
-          }
-
-          <Marker
-            center={this.state.userPosition ? this.state.userPosition : this.props.center}
+        <div style={{ height: '100%', width: '100%' }}>
+          <GoogleMapReact
+            bootstrapURLKeys={{ key: 'AIzaSyCalL3qcZmf7yCDDV9iYeAck0nKgJUKFm0' }}
             defaultCenter={this.props.center}
-            lat={center.lat}
-            lng={center.lng}
-            text={''}
-            type={0}
-            selected={this.state.selectedPlace && this.state.selectedPlace.id === ''}
-            place={this.state.selectedPlace}
-            position={{lat: center.lat, lng: center.lng}}
-            userEmail={this.props.user.email}
-          />
-        </GoogleMapReact>
+            center={center}
+            defaultZoom={this.state.zoom}
+            yesIWantToUseGoogleMapApiInternals
+            onGoogleApiLoaded={({ map, maps }) => handleApiLoaded(map, maps)}
+            onClick={({x, y, lat, lng, event}) => {
+              this.setState({ selectedPlace: null });
+            }}
+            onChildClick={(e) => {
+              // console.log(e);
+              this.getPlace(e);
+            }}
+          >
+            {
+              places &&
+              places.filter(this.filter).map((place) => (
+                <Marker
+                  center={{lat: place.lat, lng: place.long}}
+                  defaultCenter={[place.lat, place.long]}
+                  key={place.id}
+                  lat={place.lat}
+                  lng={place.long}
+                  place={place}
+                  selected={this.state.selectedPlace && this.state.selectedPlace.id === place.id}
+                  text={''}
+                  searchType={'search-total'}
+                />
+              ))
+            }
+
+            {
+              places &&
+              places.filter(this.filterEmail).map((place) => (
+                <Marker
+                  center={{lat: place.lat, lng: place.long}}
+                  defaultCenter={[place.lat, place.long]}
+                  key={place.id}
+                  lat={place.lat}
+                  lng={place.long}
+                  place={place}
+                  selected={this.state.selectedPlace && this.state.selectedPlace.id === place.id}
+                  text={''}
+                  searchType={'search-email'}
+                />
+              ))
+            }
+
+            {
+              places &&
+              places.filter(this.filterNotes).map((place) => (
+                <Marker
+                  center={{lat: place.lat, lng: place.long}}
+                  defaultCenter={[place.lat, place.long]}
+                  key={place.id}
+                  lat={place.lat}
+                  lng={place.long}
+                  place={place}
+                  selected={this.state.selectedPlace && this.state.selectedPlace.id === place.id}
+                  text={''}
+                  searchType={'search-notes'}
+                />
+              ))
+            }
+
+            <Marker
+              center={this.state.userPosition ? this.state.userPosition : this.props.center}
+              defaultCenter={this.props.center}
+              lat={center.lat}
+              lng={center.lng}
+              text={''}
+              type={0}
+              selected={this.state.selectedPlace && this.state.selectedPlace.id === ''}
+              place={this.state.selectedPlace}
+              position={{lat: center.lat, lng: center.lng}}
+              userEmail={this.props.user.email}
+            />
+          </GoogleMapReact>
+        </div>
+
+        <div className="position-fixed user-signed">
+          <div className="badge badge-success">
+            {this.props.user.email}
+          </div>
+
+          <div className="text-left mt-1">
+            <button
+              className="btn btn-sm btn-secondary"
+              onClick={this.logout}
+            >
+              Logout
+            </button>
+          </div>
+
+          {/*<Search places={places} user={this.props.user} />*/}
+
+          <div className="">
+            <div className="">
+              <form className="form-search-email">
+                <div className="form-group">
+                  <label htmlFor="search-input-email">Search anything</label>
+                  <input value={this.state.searchString} onChange={this.handleSearch} type="text" name="searchString" className="form-control" id="search-input-email" placeholder="Search" />
+                </div>
+              </form>
+
+              {
+                !!(this.state.searchEmailResults.length) &&
+                <div className="search-results">
+                {
+                  this.state.searchEmailResults.map((place) => (
+                    <div
+                      key={place.id}
+                    >
+                      <div>{place.email}</div>
+                    </div>
+                  ))
+                }
+                </div>
+              }
+
+              {
+                !!this.state.searchNotesResults.length &&
+                <div className="search-results">
+                {
+                  this.state.searchEmailResults.map((place) => (
+                    <div
+                      key={place.id}
+                    >
+                      <div>{place.notes}</div>
+                    </div>
+                  ))
+                }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
