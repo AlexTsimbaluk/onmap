@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import fire from './config/Fire';
 
 import Map from './Map';
+import Search from './Search';
 
 class Home extends Component {
 	constructor(props) {
@@ -17,7 +18,7 @@ class Home extends Component {
 	render() {
 		return (
 			<div>
-				<Map />
+				<Map user={this.props.user} />				
 				
 				<div className="position-fixed user-signed">
 					<div className="badge badge-success">
@@ -32,6 +33,8 @@ class Home extends Component {
 							Logout
 						</button>
 					</div>
+
+					<Search user={this.props.user} />
 				</div>
 			</div>
 		);

@@ -2,7 +2,7 @@
   width: 100%;
 }
 
-.form-auth .form-control:focus {
+div .form-control:focus {
     box-shadow: none;
 }
 
@@ -49,4 +49,27 @@
     /*background-size:cover;*/
     position: absolute;
     z-index: -1;
+}
+
+.custom-marker {
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid #aaa;
+    /*pointer-events: none;*/
+    position: 'absolute';
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    user-select: none;
+    /* top: 50%;
+    left: 50%; */
+}
+
+.place-marker {
+    border: 3px solid #f00;
+}
+
+.my-marker {
+    border: 3px solid #00f;
 }
