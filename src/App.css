@@ -57,35 +57,42 @@ div .form-control:focus {
     height: 20px;
     border-radius: 50%;
     border: 3px solid #aaa;
-    /*pointer-events: none;*/
-    position: 'absolute';
+    position: relative;
     z-index: 1;
     transform: translate(-50%, -50%);
     user-select: none;
-    /* top: 50%;
-    left: 50%; */
 }
 
 .place-marker {
-    border: 3px solid #f00;
+    border: 0;
+}
+
+.place-marker.muted {
+    opacity: 0.5;
 }
 
 .my-marker {
-    border: 3px solid #00f;
+    border: 0;
+}
+.custom-marker.active {
+    transform: translate(-56%, -76%) scale(1.2);
+    transition: 0.3s;
 }
 
 .search-results {
     font-size: 14px;
     background: #fff;
-    height: 200px;
-    width: 300px;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 10px;
+    max-height: 96%;
+}
+
+.search-results .note-item {
+    cursor: pointer;
 }
 
 .place-marker.search-total {
-    border: 3px solid #45824b;
+    border: 3px solid #f0f;
 }
 
 .place-marker.search-email {
@@ -107,4 +114,18 @@ div .form-control:focus {
     position: absolute;
     left: 0;
     top: 100%;
+}
+
+.note-item .note-title {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.6px;
+}
+
+.note-item .note-content {
+
+}
+
+.user-controls {
+    background: #fff;
 }

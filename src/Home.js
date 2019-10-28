@@ -20,8 +20,27 @@ class Home extends Component {
 	}
 
 	componentDidMount() {
+		// call api for place's list
+		// this.getPlaces();
+
 	  places = JSON.parse(JSON.stringify(_places));
 	  this.setState({places: places});
+	}
+
+	// call api for place's list
+	getPlaces() {
+		fetch('./data/PLACES.json')
+      .then((response) => {
+      	// console.log(response);
+      	response.json();
+      })
+      .then((data) => {
+      	// console.log(data);
+      	data && this.setState({ places: data.results })
+      })
+      .catch((error) => {
+				console.log(error);
+			});
 	}
 
 	logout() {

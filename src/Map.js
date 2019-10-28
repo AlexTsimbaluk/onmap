@@ -7,24 +7,57 @@ import _places from './data/PLACES.json';
 
 import Search from './Search';
 
+import { ReactComponent as UserNotPositionIcon } from './assets/img/user-not-position.svg';
+import { ReactComponent as UserPositionIcon } from './assets/img/user-position.svg';
+
+import { ReactComponent as CenterOnUserIcon } from './assets/img/center-on-user.svg';
+
+import { ReactComponent as MapNoteIcon } from './assets/img/map-pin-note.svg';
+import { ReactComponent as MapUserIcon } from './assets/img/map-pin-user.svg';
+// import { ReactComponent as MapNoteActiveIcon } from './assets/img/map-pin-note-active.svg';
+// import { ReactComponent as MapUserActiveIcon } from './assets/img/map-pin-user-active.svg';
+import { ReactComponent as MapUserActiveIcon } from './assets/img/map-pin-user-active-1.svg';
+import { ReactComponent as MapNoteActiveIcon } from './assets/img/map-pin-note-active-1.svg';
+
+import { ReactComponent as ListIcon } from './assets/img/list.svg';
+import { ReactComponent as ListIcon2 } from './assets/img/list-2.svg';
+import { ReactComponent as ListHamburgerIcon } from './assets/img/list-hamburger.svg';
+
+import { ReactComponent as EditIcon } from './assets/img/edit.svg';
+
+import { ReactComponent as PlusGreenCircle } from './assets/img/plus-green-circle.svg';
+import { ReactComponent as AddNote } from './assets/img/add-note.svg';
+import { ReactComponent as AddNote2 } from './assets/img/add-note-2.svg';
+
+import { ReactComponent as SaveNote } from './assets/img/save-note.svg';
+import { ReactComponent as EditNote } from './assets/img/edit-note.svg';
 
 
-const Marker = ({ text, type, searchType, place, selected, userEmail, position, openNoteForm, editing, addNote, handleEditNote }) => {
+
+const Marker = ({ type, searchType, place, selected, selectedPlace, userEmail, position, openNoteForm, editing, addNote, handleEditNote, active, icon }) => {
   let searchClass = '';
 
   if(searchType === 'search-total') {
-    searchClass = 'search-total';
-  } else if(searchType === 'search-email') {
+    searchClass = ' search-total';
+  } else if(searchType === ' search-email') {
     searchClass = 'search-email';
-  } else if(searchType === 'search-notes') {
+  } else if(searchType === ' search-notes') {
     searchClass = 'search-notes';
   }
 
-  let classNameString = 'custom-marker ' + searchClass;
+  let classNameString = 'custom-marker' + searchClass;
   if(type === 0) {
     classNameString += ' my-marker';
   } else {
     classNameString += ' place-marker';
+  }
+
+  if(selectedPlace && selectedPlace.notes !== place.notes) {
+    classNameString += ' muted';
+  }
+
+  if(selected) {
+    classNameString += ' active';
   }
 
   return (
@@ -32,17 +65,38 @@ const Marker = ({ text, type, searchType, place, selected, userEmail, position, 
       {
         type === 0
         ?
-        <div className={classNameString}>{text}</div>
+        <div className={classNameString}>
+          {
+            !!selected ? <MapUserActiveIcon width={30} /> : <MapUserIcon width={30} />
+          }
+        </div>
         :
-        <div className={classNameString}>{text}</div>
+        <div className={classNameString}>
+          {
+            !!selected ? <MapNoteActiveIcon width={30} /> : <MapNoteIcon width={30} />
+          }
+        </div>
       }
 
       {
-        selected && !userEmail && <InfoWindow place={place} />
+        selected &&
+        !userEmail
+        && <InfoWindow
+          place={place}
+        />
       }
 
       {
-        selected && userEmail && <InfoWindow openNoteForm={openNoteForm} handleEditNote={handleEditNote} addNote={addNote} userEmail={userEmail} place={place} editing={editing} />
+        selected
+        && userEmail
+        && <InfoWindow
+            openNoteForm={openNoteForm}
+            handleEditNote={handleEditNote}
+            addNote={addNote}
+            userEmail={userEmail}
+            place={place}
+            editing={editing}
+          />
         // userEmail && <AddNoteForm position={position} userEmail={userEmail} />
       }
     </div>
@@ -81,6 +135,7 @@ const InfoWindow = ({place, userEmail, openNoteForm, editing, addNote, handleEdi
     boxShadow: '0 2px 7px 1px rgba(0, 0, 0, 0.3)',
     padding: 10,
     zIndex: 100,
+    transform: 'translateY(-50%)'
   };
 
 
@@ -105,26 +160,40 @@ const InfoWindow = ({place, userEmail, openNoteForm, editing, addNote, handleEdi
   return (
     <div className="d-flex justify-content-between" style={infoWindowStyle}>
       <div>
-        <div style={{ fontSize: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 500, letterSpacing: '0.6px' }}>
           {place.email}
         </div>
         
-        <div style={{ fontSize: 12, color: 'grey' }}>
+        <div className="pb-1" style={{ fontSize: 12, color: 'grey' }}>
           {place.lat}, {place.long}
         </div>
 
-        <div style={{ fontSize: 14, color: 'green' }}>
-          {place.notes}
-        </div>
+        {
+          !!place.notes.length &&
+          <div className="border-top pt-1 text-monospace" style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.6px' }}>
+            {place.notes}
+          </div>
+        }
       </div>
 
       <div>
         {
+          !!handleEditNote &&
           !!(!editing) &&
-          <div
-            onClick={openNoteForm}
-            className="add-note-button"
-          >+</div>
+          <div className="form-group">
+            <button
+              onClick={openNoteForm}
+              className="btn btn-link p-0 add-note-button"
+            >
+              {
+                !(!!place.notes.length) && <AddNote width={30} />
+              }
+
+              {
+                !!place.notes.length && <EditNote width={30} />
+              }
+            </button>
+          </div>
         }
 
         {
@@ -132,7 +201,9 @@ const InfoWindow = ({place, userEmail, openNoteForm, editing, addNote, handleEdi
           <div
             onClick={addNote}
             className="add-note-button"
-          >OK</div>
+          >
+            <SaveNote width={24} />
+          </div>
         }
       </div>
 
@@ -140,19 +211,14 @@ const InfoWindow = ({place, userEmail, openNoteForm, editing, addNote, handleEdi
         !!editing &&
         <form className="form-add-note">
           <div className="form-group">
-            <textarea onClick={(e) => e.stopPropagation()} onChange={handleEditNote} type="text" name="add-note" className="form-control"></textarea>
+            <textarea onClick={(e) => e.stopPropagation()} onChange={handleEditNote} type="text" name="add-note" className="form-control" defaultValue={place.notes}
+            ></textarea>
           </div>
         </form>
       }
     </div>
   );
 };
-
-const handleApiLoaded = (map, maps) => {
-  // console.log(map);
-  // console.log(maps);
-};
-
 
 
 
@@ -163,6 +229,9 @@ class Map extends Component {
     super();
 
     this.state = ({
+      map: null,
+      maps: null,
+      bounds: null,
       userPosition: null,
       zoom: 5,
       selectedPlace: null,
@@ -172,7 +241,9 @@ class Map extends Component {
       searchEmailResults: [],
       searchNotesResults: [],
       editing: false,
-      noteText: ''
+      noteText: '',
+      activeMarkerCenter: null,
+      listVisible: true
     });
 
     this.handlePosition = this.handlePosition.bind(this);
@@ -185,6 +256,7 @@ class Map extends Component {
     this.filter = this.filter.bind(this);
     this.filterEmail = this.filterEmail.bind(this);
     this.filterNotes = this.filterNotes.bind(this);
+    this.setCenter = this.setCenter.bind(this);
   }
 
   static defaultProps = {
@@ -203,6 +275,19 @@ class Map extends Component {
     if(this.props.places) {
       places = this.props.places;
     }
+
+    /*if(!prevState.map && this.state.map) {
+      console.log(this.state.map);
+    }
+
+    if(!prevState.maps && this.state.maps) {
+      console.log(this.state.maps);
+    }*/
+
+    /*if(!prevState.bounds && places && this.state.map && this.state.maps) {
+      let bounds = this.getMapBounds(this.state.map, this.state.maps, places);
+      this.setState({bounds: bounds});
+    }*/
 
     /*console.log(this.state.searchString.length > 2);
     console.log(this.state.searchString !== prevState.searchString);
@@ -231,6 +316,44 @@ class Map extends Component {
       this.setState({searchNotesResults: []});        
     }
   }
+
+
+
+  handleApiLoaded = (map, maps) => {
+    // Fit map to its bounds after the api is loaded
+    this.setState({map: map});
+    this.setState({maps: maps});
+
+    let bounds = this.getMapBounds(this.state.map, this.state.maps, places);
+    this.setState({bounds: bounds});
+
+    map.fitBounds(this.state.bounds);
+
+    this.mapResizeListener(this.state.map, this.state.maps, this.state.bounds);
+  };
+
+  // Return map bounds based on list of places
+  getMapBounds = (map, maps, places) => {
+    const bounds = new maps.LatLngBounds();
+
+    places.forEach((place) => {
+      bounds.extend(new maps.LatLng(
+        place.lat,
+        place.long,
+      ));
+    });
+
+    return bounds;
+  };
+
+  // Re-center map when resizing the window
+  mapResizeListener = (map, maps, bounds) => {
+    maps.event.addDomListenerOnce(map, 'idle', () => {
+      maps.event.addDomListener(window, 'resize', () => {
+        map.fitBounds(bounds);
+      });
+    });
+  };
 
   handlePosition() {
     let _this = this;
@@ -263,9 +386,16 @@ class Map extends Component {
   filter(place) {
     if(this.state.searchString.length < 3) return true;
 
-    // console.log(this.filterEmail(place) && this.filterNotes(place));
+    for(let key in place) {
+      let finded;
 
-    return this.filterEmail(place) && this.filterNotes(place);
+      if(key === 'email' || key === 'notes') {
+        finded = place[key].toLowerCase().search(this.state.searchString) !== -1;
+
+        if(finded) return finded;
+        continue;
+      }
+    }
   }
 
   filterEmail(place) {
@@ -291,47 +421,48 @@ class Map extends Component {
   openNoteForm(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log('openNoteForm');
+    // console.log('openNoteForm');
 
     this.setState({editing: true});
   }
 
   addNote(e) {
-    console.log(this.state.noteText);
-    let center = this.state.userPosition ? this.state.userPosition : this.props.center;
-    let place = {
-      id: '',
-      lat: center.lat,
-      long: center.lng,
-      notes: this.state.noteText,
-      email: this.props.user.email
-    };
+    // console.log(this.state.noteText);
+    // console.log(this.state.selectedPlace);
 
-    localStorage.setItem('userPlace', JSON.stringify(place));
+
+    let _place = this.state.selectedPlace;
+    _place.notes = this.state.noteText;
+
+    this.setState({selectedPlace: _place})
+    localStorage.setItem('userPlace', JSON.stringify(_place));
     this.setState({editing: false});
   }
 
   handleEditNote(e) {
-    console.log(e.target.value);
+    // console.log(e.target.value);
     this.setState({noteText: e.target.value});
   }
 
-  getPlace(id) {
-    let i = _places.findIndex((p) => p.id === id);
-    // console.log(i);
-    // console.log(_places[i]);
+  getPlace(id, place, placeProps) {
+    // console.log(id);
+    // console.log(place);
 
-    _places[i] && this.setState({ selectedPlace: _places[i] });
+    if(place && place.id == id) {
+      // let i = _places.findIndex((p) => p.id === place.id);
 
-    if(i === -1) {
+      // console.log(i);
+      // console.log(_places[i]);
+
+      // _places[i] && this.setState({ selectedPlace: _places[i] });
+      this.setState({ selectedPlace: place });
+    } else {
       // наш маркер
 
       let center = this.state.userPosition ? this.state.userPosition : this.props.center;
 
-      console.log(JSON.parse(localStorage.getItem('userPlace')));
-
       let place = {
-        id: '',
+        id: id,
         lat: center.lat,
         long: center.lng,
         notes: '',
@@ -342,19 +473,39 @@ class Map extends Component {
         localStorage.setItem('userPlace', JSON.stringify(place));
       } else {
         let p = JSON.parse(localStorage.getItem('userPlace'));
-        console.log(p.notes);
 
         if(p.notes.length) {
           place.notes = p.notes;
         }
 
+        if(p.id.length) {
+          place.id = p.id;
+        }
+
         this.setState({ selectedPlace: place });
       }
-
-
-      // console.log(place);
-
     }
+  }
+
+  setCenter(place, id, placeProps) {
+    // console.log(id);
+    // console.log(place);
+    // console.log(placeProps);
+
+    let lat, long, lng;
+
+    if(place && (place.id == id || !id)) {
+      ({ lat, long } = place);
+      long = +long;
+    } else if(placeProps && (placeProps.position || placeProps.center)) {
+      ({ lat, lng } = placeProps.position ? placeProps.position : placeProps.center);
+      lng = +lng;
+    }
+
+    lat = +lat;
+
+    this.state.map && this.state.map.setCenter({lat: lat, lng: long ? long : lng});
+    this.setState({activeMarkerCenter: {lat: lat, lng: long ? long : lng}});
   }
 
   handleSearch(e) {
@@ -362,39 +513,61 @@ class Map extends Component {
   }
 
 
+  // mapRefEl = ref => this.mapRef = ref;
 
 
  
   render() {
-    // let places = JSON.parse(JSON.stringify(_places));
-    // let places = this.props.places;
-    // places = this.props.places;
-    // console.log(places);
-    // console.log(this.state.selectedPlace);
+    /*
+      */
+      // let places = JSON.parse(JSON.stringify(_places));
+      // let places = this.props.places;
+      // places = this.props.places;
 
-    // console.log(this.state.searchResults);
-    // console.log(this.state.searchEmailResults);
-    // console.log(this.state.searchNotesResults);
+      // console.log(places);
+
+      // console.log(this.state.selectedPlace);
+      // console.log(this.state.activeMarkerCenter);
+
+      // console.log(this.state.searchResults);
+      // console.log(this.state.searchEmailResults);
+      // console.log(this.state.searchNotesResults);
+
+      // console.log(this.state.map);
+      // console.log(this.state.maps);
+      // console.log(this.state.bounds);
+      // console.log(this.state.selectedPlace);
+      // console.log(this.state.activeMarkerCenter);
+      
 
     let center = this.state.userPosition ? this.state.userPosition : this.props.center;
 
     return (
-      // Important! Always set the container height explicitly
       <div style={{ height: '100vh', width: '100%' }}>
-        <div style={{ height: '100%', width: '100%' }}>
+        <div
+          style={{ height: '100%', width: '100%' }}
+          className="d-flex"
+        >
           <GoogleMapReact
             bootstrapURLKeys={{ key: 'AIzaSyCalL3qcZmf7yCDDV9iYeAck0nKgJUKFm0' }}
-            defaultCenter={this.props.center}
-            center={center}
+            defaultCenter={center}
+            center={this.state.activeMarkerCenter}
             defaultZoom={this.state.zoom}
             yesIWantToUseGoogleMapApiInternals
-            onGoogleApiLoaded={({ map, maps }) => handleApiLoaded(map, maps)}
+            onGoogleApiLoaded={({ map, maps }) => this.handleApiLoaded(map, maps)}
             onClick={({x, y, lat, lng, event}) => {
               this.setState({ selectedPlace: null });
+              this.setState({ activeMarkerCenter: null });
+              this.setState({ editing: false });
             }}
-            onChildClick={(e) => {
-              // console.log(e);
-              this.getPlace(e);
+            onChildClick={(childId, childProps) => {
+              // console.log(childId, childProps.place);
+              this.getPlace(childId, childProps.place, childProps);
+              this.setCenter(childProps.place, childId, childProps);
+            }}
+            // ref={this.mapRefEl}
+            onChange={({ center, zoom, bounds, marginBounds }) => {
+              // console.log(center, zoom, bounds, marginBounds);
             }}
           >
             {
@@ -408,54 +581,19 @@ class Map extends Component {
                   lng={place.long}
                   place={place}
                   selected={this.state.selectedPlace && this.state.selectedPlace.id === place.id}
-                  text={''}
-                  searchType={'search-total'}
+                  selectedPlace={this.state.selectedPlace}
                 />
               ))
             }
 
-            {
-              places &&
-              places.filter(this.filterEmail).map((place) => (
-                <Marker
-                  center={{lat: place.lat, lng: place.long}}
-                  defaultCenter={[place.lat, place.long]}
-                  key={place.id}
-                  lat={place.lat}
-                  lng={place.long}
-                  place={place}
-                  selected={this.state.selectedPlace && this.state.selectedPlace.id === place.id}
-                  text={''}
-                  searchType={'search-email'}
-                />
-              ))
-            }
-
-            {
-              places &&
-              places.filter(this.filterNotes).map((place) => (
-                <Marker
-                  center={{lat: place.lat, lng: place.long}}
-                  defaultCenter={[place.lat, place.long]}
-                  key={place.id}
-                  lat={place.lat}
-                  lng={place.long}
-                  place={place}
-                  selected={this.state.selectedPlace && this.state.selectedPlace.id === place.id}
-                  text={''}
-                  searchType={'search-notes'}
-                />
-              ))
-            }
-
+            {/*marker for user current position*/}
             <Marker
               center={this.state.userPosition ? this.state.userPosition : this.props.center}
               defaultCenter={this.props.center}
               lat={center.lat}
               lng={center.lng}
-              text={''}
               type={0}
-              selected={this.state.selectedPlace && this.state.selectedPlace.id === ''}
+              selected={this.state.selectedPlace && (this.state.selectedPlace.id === '' || JSON.parse(localStorage.getItem('userPlace')) && this.state.selectedPlace.id === JSON.parse(localStorage.getItem('userPlace')).id)}
               place={this.state.selectedPlace}
               position={{lat: center.lat, lng: center.lng}}
               userEmail={this.props.user.email}
@@ -463,63 +601,110 @@ class Map extends Component {
               addNote={this.addNote}
               handleEditNote={this.handleEditNote}
               editing={this.state.editing}
+              selectedPlace={this.state.selectedPlace}
             />
           </GoogleMapReact>
         </div>
 
-        <div className="position-fixed user-signed">
-          <div className="badge badge-success">
-            {this.props.user.email}
+        <div className="d-flex flex-column p-0 col-sm-3 position-fixed user-signed" style={this.state.listVisible ? {height: '100%'} : {}}>
+          <div className="col-1 mw-100 px-1 pb-2 pt-1 user-controls">
+            <div>
+              <div className="badge badge-pill badge-success px-2 py-1">
+                {this.props.user.email}
+                <UserPositionIcon width={16} fill="#fff" />
+              </div>
+            </div>
+
+            <div>
+              <div className="d-flex justify-content-between mt-2">
+                <button
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={this.logout}
+                >
+                  Logout
+                </button>
+
+                <div className="">
+                  
+
+                  <ListHamburgerIcon
+                    width={30}
+                    onClick={() => this.setState({listVisible: !this.state.listVisible})}
+                  />
+
+                  <CenterOnUserIcon
+                    width={30}
+                    fill="#0083ff"
+                    onClick={() => this.state.map && this.state.map.setCenter({lat: this.state.userPosition.lat, lng: this.state.userPosition.lng})}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="text-left mt-1">
-            <button
-              className="btn btn-sm btn-secondary"
-              onClick={this.logout}
-            >
-              Logout
-            </button>
-          </div>
 
           {/*<Search places={places} user={this.props.user} />*/}
 
-          <div className="pt-2">
-            <form className="form-search-email">
-              <div className="form-group">
-                <input value={this.state.searchString} onChange={this.handleSearch} type="text" name="searchString" className="form-control" id="search-input-email" placeholder="Search" />
-              </div>
-            </form>
-
-            {
-              !!(this.state.searchEmailResults.length) &&
-              <div className="search-results">
-              {
-                this.state.searchEmailResults.map((place) => (
-                  <div
-                    key={place.id}
-                  >
-                    <div>{place.email}</div>
+          {
+            this.state.listVisible &&
+            <div className="d-flex flex-column p-0 pt-2 col-11 mw-100">
+              <div className="col-1 p-0 mw-100">
+                <form className="form-search-email">
+                  <div className="form-group">
+                    <input value={this.state.searchString} onChange={this.handleSearch} type="text" name="searchString" className="form-control" id="search-input-email" placeholder="Search" />
                   </div>
-                ))
-              }
+                </form>
               </div>
-            }
 
-            {
-              !!(this.state.searchNotesResults.length) &&
-              <div className="search-results">
-              {
-                this.state.searchNotesResults.map((place) => (
-                  <div
-                    key={place.id}
-                  >
-                    <div>{place.notes}</div>
+              <div className="col-11 p-0 mw-100">
+                <div className="h-100 mw-100 position-absolute list-group list-group-flush px-2 search-results all-notes">
+                {
+                  places &&
+                  places.filter(this.filter).map((place) => (
+                    <div
+                      className="list-group-item py-1 px-2 note-item"
+                      key={place.id}
+                      onClick={() => this.setCenter(place, null, null)}
+                    >
+                      <div className="note-title">{place.email}</div>
+                      <div className="note-content">{place.notes}</div>
+                    </div>
+                  ))
+                }
+                </div>
+
+                {
+                  !!(this.state.searchEmailResults.length) &&
+                  <div className="search-results">
+                  {
+                    this.state.searchEmailResults.map((place) => (
+                      <div
+                        key={place.id}
+                      >
+                        <div>{place.email}</div>
+                      </div>
+                    ))
+                  }
                   </div>
-                ))
-              }
+                }
+
+                {
+                  !!(this.state.searchNotesResults.length) &&
+                  <div className="search-results">
+                  {
+                    this.state.searchNotesResults.map((place) => (
+                      <div
+                        key={place.id}
+                      >
+                        <div>{place.notes}</div>
+                      </div>
+                    ))
+                  }
+                  </div>
+                }
               </div>
-            }
-          </div>
+            </div>
+          }
         </div>
       </div>
     );
